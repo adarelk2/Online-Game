@@ -15,7 +15,7 @@ class Room_Controller
     getRoomValid()
     {
         let response = false;
-        this.rooms = this.rooms.filter(room=>{
+        this.rooms = this.rooms.filter((room,key)=>{
             let index = room.users.findIndex(User=>{
                 return User.userid == this.ws.userid ? true : false;
             })
@@ -23,6 +23,10 @@ class Room_Controller
             if(index == -1)
             {
                 return true;
+            }
+            else
+            {
+                this.deleteRoom([key]);
             }
 
         })
@@ -39,25 +43,30 @@ class Room_Controller
     deleteRoom(_rooms)
     {
         _rooms.map(room=>{
-            const index = this.rooms.findIndex(Room=>{
-                return Room.id == room ? true : false;
+            this.rooms[room].users.map(User=>{
+                if(User != this.ws.userid)
+                {
+                    User.send(JSON.stringify({method:"roomMatch"}));
+                }
             })
-
-            if(index >=0)
-            {
-                this.rooms.splice(index,1);
-            }
+            this.rooms.splice(room,1);
         })
+
+        return this.rooms;
     }
 
-    findMatch(_roomID)
+    createMatch(_roomID)
     {
        let findRoom = this.rooms.findIndex(Element=>{
         return Element.id == _roomID ? true : false;
        })
         this.rooms[findRoom].addUser(this.ws);
 
-        return this;
+        this.rooms[findRoom].users.map(User=>{
+            this.rooms[findRoom].pushMsg(`Hey My Name is: ${User.userid}`,User.userid);
+        })
+
+        return this.rooms[findRoom];
     }
 
     createRoom()
