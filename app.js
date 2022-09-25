@@ -8,7 +8,7 @@ const Socket_Controller = require("./Class/controller/socket.controller");
 const Room_Controller = require("./Class/controller/room.controller");
 const Wss = new WebSocket.Server({port:3001});
 const bodyParser = require('body-parser');
-const { log } = require('console');
+const Socket_Model = require('./Class/Model/socket.model');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(function (req, res, next) {
@@ -29,39 +29,41 @@ app.use(function (req, res, next) {
     next();
 });
 
-const SOCKETS = {};
-exports.SOCKETS = SOCKETS;
+const ROOMS = new Room_Controller()
+exports.ROOMS = ROOMS;
 
-const CHAT_ROOM = [];
-exports.CHAT_ROOM = CHAT_ROOM;
+const USERS = new Socket_Controller()
+exports.USERS = USERS;
 
 Wss.on("connection",(ws)=>{
     ws.on("message",function incoming(message){
         const obj = JSON.parse(message);
-        const socket = new Socket_Controller(obj,ws);
-        const method = socket.method;
+        ws.userid = obj.userid;
+        const socket = new Socket_Model(obj,ws);
+        
+        const method = obj.method;
         socket[method]();
 
-        if(socket.errors.length)
-        {
-            ws.send(JSON.stringify({method:"errors",msg:socket.errors.join("<br>")}))
-        }
+        // if(socket.errors.length)
+        // {
+        //     ws.send(JSON.stringify({method:"errors",msg:socket.errors.join("<br>")}))
+        // }
     })
 
-    setInterval(()=>{
+    // setInterval(()=>{
 
-        const users = [];
-        for (const [key] of Object.entries(SOCKETS)) 
-        {
-            let date = Date.now();
-            if(date - SOCKETS[key].date > 10000)
-            {
-               users.push(key);
-            }  
-        }
-        const socket = new Socket_Controller({users},ws);
-        socket.deleteUsers();
-    },3000)
+    //     const users = [];
+    //     for (const [key] of Object.entries(SOCKETS)) 
+    //     {
+    //         let date = Date.now();
+    //         if(date - SOCKETS[key].date > 10000)
+    //         {
+    //            users.push(key);
+    //         }  
+    //     }
+    //     const socket = new Socket_Controller({users},ws);
+    //     socket.deleteUsers();
+    // },3000)
 
 })
 
@@ -78,27 +80,12 @@ app.post("/API",((req,res)=>{
 }))
 
 app.get("/getOnlineUsers",((req,res)=>{
-    for (const [key, value] of Object.entries(SOCKETS)) 
-    {
-        let date = Date.now();
-        if(date - SOCKETS[key].date > 3000)
-        {
-            delete SOCKETS[key];
-        }  
-    }
 
     const users = [];
-    for (const [key, value] of Object.entries(SOCKETS)) 
+    for (const [key, value] of Object.entries(USERS.ws)) 
     {
-        if(SOCKETS[key].userid)
-        {
-            users.push(SOCKETS[key].userid);
-        }
+         users.push(key);
     }
-
-    users.filter(user=>{
-        return user ? true : false;
-    })
     res.send(users);
 }))
 
