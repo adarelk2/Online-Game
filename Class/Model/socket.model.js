@@ -52,10 +52,9 @@ class Socket_Model
 
     sendRequestForRoomEntering()
     {
-      console.log("enterd");
       if(this.getRoomID())
       {
-        config.ROOMS.returnToLoby(this);
+        config.ROOMS.disconnectFromRooms(this);
       }
 
       let index = config.ROOMS.rooms.findIndex(room=>room.id == this.params.id);

@@ -29,7 +29,7 @@ class Socket_Controller
     deleteUsers(_users)
     {
         _users.map(user=>{
-            config.ROOMS.returnToLoby(this.ws[user]);
+            config.ROOMS.disconnectFromRooms(this.ws[user]);
             delete this.ws[user]
         })
         if(_users.length)

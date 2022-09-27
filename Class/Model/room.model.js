@@ -3,8 +3,9 @@ const config = require("../../app");
 class Room_Model
 {
     id = null;
-    users = [];
     admin = null;
+    Alpha = [];
+    Bravo = [];
     messages = [];
     constructor(_user, _maxUsers=2, _title = "client ##")
     {
@@ -17,8 +18,9 @@ class Room_Model
 
     addUser(_user)
     {
+        let team = (this.Alpha.length > this.Bravo.length) ? "Bravo" : "Alpha";
         _user.setRoomID(this.id);
-        this.users.push(_user);
+        this[team].push(_user);
         return this;
     }
 
