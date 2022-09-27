@@ -1,5 +1,5 @@
-const Socket_Model = require("../Model/socket.model");
-const Room_Controller = require("../controller/room.controller");
+const config = require("../../app");
+
 
 class Socket_Controller
 {
@@ -23,14 +23,27 @@ class Socket_Controller
 
     addUser(_ws)
     {
-       this.ws[_ws.userid] = _ws;
+       this.ws[_ws.ws.userid] = _ws;
     }
 
     deleteUsers(_users)
     {
         _users.map(user=>{
+            config.ROOMS.returnToLoby(this.ws[user]);
             delete this.ws[user]
         })
+        if(_users.length)
+        {
+            config.ROOMS.sendRoomUpdated();
+        }
+    }
+
+    sendGlobal(_msg)
+    {
+        for (const [key, value] of Object.entries(this.ws)) 
+        {
+            value.send(_msg);
+        }
     }
 }
 

@@ -1,20 +1,24 @@
+const config = require("../../app");
+
 class Room_Model
 {
     id = null;
     users = [];
+    admin = null;
     messages = [];
-
-    constructor(_users)
+    constructor(_user, _maxUsers=2, _title = "client ##")
     {
-        this.users.push(_users);
         this.id = Date.now();
-
-        return this;
+        this.maxUsers = _maxUsers;
+        this.title = _title;
+        this.admin = _user.userid;
+        this.addUser(_user);
     }
 
-    addUser(_userID)
+    addUser(_user)
     {
-        this.users.push(_userID);
+        _user.setRoomID(this.id);
+        this.users.push(_user);
         return this;
     }
 
@@ -25,6 +29,11 @@ class Room_Model
         this.users.map(user=>{
             user.send(JSON.stringify({method:"msg",messages:this.messages}));
         })
+    }
+
+    setAdmin(_admin)
+    {
+        this.admin = _admin;
     }
 }
 

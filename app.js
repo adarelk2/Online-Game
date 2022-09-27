@@ -36,35 +36,20 @@ const USERS = new Socket_Controller()
 exports.USERS = USERS;
 
 Wss.on("connection",(ws)=>{
+    console.log("conneciton");
     ws.on("message",function incoming(message){
         const obj = JSON.parse(message);
-        ws.userid = obj.userid;
+
         const socket = new Socket_Model(obj,ws);
         
         const method = obj.method;
         socket[method]();
 
-        // if(socket.errors.length)
-        // {
-        //     ws.send(JSON.stringify({method:"errors",msg:socket.errors.join("<br>")}))
-        // }
+        if(socket.errors.length)
+        {
+            ws.send(JSON.stringify({method:"errors",msg:socket.errors.join("<br>")}))
+        }
     })
-
-    // setInterval(()=>{
-
-    //     const users = [];
-    //     for (const [key] of Object.entries(SOCKETS)) 
-    //     {
-    //         let date = Date.now();
-    //         if(date - SOCKETS[key].date > 10000)
-    //         {
-    //            users.push(key);
-    //         }  
-    //     }
-    //     const socket = new Socket_Controller({users},ws);
-    //     socket.deleteUsers();
-    // },3000)
-
 })
 
 app.post("/API",((req,res)=>{
@@ -87,6 +72,11 @@ app.get("/getOnlineUsers",((req,res)=>{
          users.push(key);
     }
     res.send(users);
+}))
+
+app.get("/getUnixTime",((req,res)=>{
+    let time = Date.now();
+    res.send(JSON.stringify(time));
 }))
 
 server.listen(port);
