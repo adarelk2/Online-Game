@@ -1,4 +1,6 @@
 const config = require("../../app");
+const Attack = require("../Attack");
+const Player = require('../Player');
 
 class Socket_Model
 {
@@ -15,73 +17,51 @@ class Socket_Model
 
     ping()
     { 
+        let userRestart = false;
+
         if(this.params.userid)
         {
+          if(!this.ws.userid)//first Time Connected
+          {
+            userRestart = true;
+          }
           this.ws.userid = this.params.userid;
         }
 
         config.USERS.addUser(this);
         this.send({method:"pong", ping: new Date().getTime()});
+
+        if(userRestart)
+        {
+          config.ROOMS.disconnectFromRooms(this.ws);
+          config.ROOMS.sendRoomUpdated();
+        }
     }
 
     send(_msg)
     {
-      this.ws.send(JSON.stringify(_msg));
+      setTimeout(()=>{
+        this.ws.send(JSON.stringify(_msg));
+      },500)
     }
 
-    findRoom()
+    startPlay()
     {
-      let room = config.ROOMS.getRoomsValid(this);
-      if(!room)
+      let room = config.ROOMS.getRoomByID(this.getRoomID()).room;
+      if(room.getCountOfPlayers() <=1)
       {
-        this.errors.push("לא נמצא חדר");
-      }
-      else
-      {
-        room.addUser(this);
-        config.ROOMS.sendRoomUpdated();
+        this.errors.push("אין אפשרות להתחיל מתחת ל2 שחקנים");
       }
 
-    }
-
-    createNewRoom()
-    {
-      config.ROOMS.createNewRoom(this);
-      config.ROOMS.sendRoomUpdated();
-    }
-
-    sendRequestForRoomEntering()
-    {
-      if(this.getRoomID())
+      if(!this.errors.length)
       {
-        config.ROOMS.disconnectFromRooms(this);
-      }
-
-      let index = config.ROOMS.rooms.findIndex(room=>room.id == this.params.id);
-      if(index >=0)
-      {
-        let Room = config.ROOMS.roomIsValid(this, index);
-        if(!Room)
-        {
-          this.errors.push("התחברות לחדר נכשלה");
-        }
-        else
-        {
-          Room.addUser(this);
-          this.send({method:"enteringTheRoom", roomID: Room.id});
-        }
-
-          config.ROOMS.sendRoomUpdated();
-      }
-      else
-      {
-        this.errors.push("התחברות לחדר נכשלה");
+        room.startPlay();
       }
     }
 
-    getRooms()
+    initPlayer()
     {
-      this.send({method:"RoomList", rooms:config.ROOMS.rooms});
+      this.ws.player = new Player();
     }
 
     getRoomID()

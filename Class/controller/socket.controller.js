@@ -12,18 +12,18 @@ class Socket_Controller
             for (const [key] of Object.entries(this.ws)) 
             {
                 let date = Date.now();
-                if(date - this.ws[key].date > 10000)
+                if(date - this.ws[key].date > 7000)
                 {
                     users.push(key);
                 }  
             }
             this.deleteUsers(users);
-        },3000)
+        },2000)
     }
 
     addUser(_ws)
     {
-       this.ws[_ws.ws.userid] = _ws;
+        this.ws[_ws.ws.userid] = _ws;
     }
 
     deleteUsers(_users)
