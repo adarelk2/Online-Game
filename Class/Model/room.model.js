@@ -1,11 +1,19 @@
 const RoomConfig = require("../../Const/Room.js");
 const config = require("../../app");
+const Player_Model = require("../Model/player.model");
 
 class Room_Model
 {
     id = null;
     admin = null;
-
+    Alpha = {
+        coins:0,
+        players:{}
+    }
+    Bravo = {
+        coins:0,
+        players:{}
+    }
     messages = [];
     constructor(_user, _maxUsers=4, _title = "client ##")
     {
@@ -14,19 +22,17 @@ class Room_Model
         this.title = _title;
         this.admin = _user.userid;
 
-        RoomConfig.Room.Team.map(team=>{
-            this[team] = [];
-        })
-
         this.addUser(_user);
     }
 
     addUser(_user)
     {
+        let Player = new Player_Model(null, _user.ws);
+
         const team = this.getDefaultTeam();
 
-        _user.setRoomID(this.id);
-        this[team].push(_user);
+        this[team].players[_user.userid] = Player;
+        Player.setRoomID(this.id);
 
         this.sendMsg({method:"roomRender", room:this});
         return this;
@@ -38,9 +44,9 @@ class Room_Model
         let team_selected = RoomConfig.Room.Team[0];
 
         RoomConfig.Room.Team.map(team=>{
-            if(this[team].length < count)
+            if(Object.keys(this[team].players).length < count)
             {
-                count = this[team].length
+                count = Object.keys(this[team].players).length
                 team_selected = team;
             }
         })
@@ -56,16 +62,18 @@ class Room_Model
 
     setRandomAdmin()
     {
-        const newAdmin = (this[RoomConfig.Room.Team[0]].length) ? this[RoomConfig.Room.Team[0]][0]  : this[RoomConfig.Room.Team[1]][0];
+        const newAdmin = (Object.keys(this[RoomConfig.Room.Team[0]].players).length) ? Object.values(this[RoomConfig.Room.Team[0].players])[0] : Object.values(this[RoomConfig.Room.Team[1].players])[0];
+        console.log(newAdmin);
         this.setAdmin(newAdmin);
     }
 
     sendMsg(_msg)
     {
         RoomConfig.Room.Team.map(team=>{
-            this[team].map(user=>{
-                user.send(_msg)
-            })
+            for (const [key, value] of Object.entries(this[team].players)) 
+            {
+                value.send(_msg)
+            }
         })
     }
 
@@ -73,27 +81,52 @@ class Room_Model
     {
         let count = 0;
         RoomConfig.Room.Team.map(team=>{
-            count = count + this[team].length;
+            count = count + Object.keys(this[team].players).length;
         })
 
         return count;
     }
 
-    removePlayer(_index)
+    removePlayer(_user)
     {
-        this[_index.team][_index.index].setRoomID(false);
-        this[_index.team].splice(_index.index,1);
+        this[_user.team].players[_user.userid].setRoomID(false);
+        delete this[_user.team].players[_user.userid];
         this.sendMsg({method:"roomRender", room:this});
     }
 
     startPlay()
     {
         RoomConfig.Room.Team.map(team=>{
-            this[team].map(user=>{
+            for (const [key, user] of Object.entries(this[team].players)) 
+            {
                 user.initPlayer();
-            })
+            }
         })
         this.sendMsg({method:"renderGame",room:this})
+    }
+
+    isUserExist(_user)
+    {
+        let response = (this.Bravo.players[_user.userid] || this.Alpha.players[_user.userid]) ? true : false;
+        return response;
+    }
+
+    getPlayerTeam(_user)
+    {
+        let isUserExist = this.isUserExist(_user);
+        let team = false;
+
+        if(isUserExist)
+        {
+            team = (this.Bravo.players[_user.userid]) ? "Bravo" : "Alpha";
+        }
+
+        return team;
+    }
+
+    addCoin(_team)
+    {
+        this[_team].coins +=1;
     }
 }
 

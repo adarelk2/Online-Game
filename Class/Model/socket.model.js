@@ -1,6 +1,4 @@
 const config = require("../../app");
-const Attack = require("../Attack");
-const Player = require('../Player');
 
 class Socket_Model
 {
@@ -43,25 +41,6 @@ class Socket_Model
       setTimeout(()=>{
         this.ws.send(JSON.stringify(_msg));
       },500)
-    }
-
-    startPlay()
-    {
-      let room = config.ROOMS.getRoomByID(this.getRoomID()).room;
-      if(room.getCountOfPlayers() <=1)
-      {
-        this.errors.push("אין אפשרות להתחיל מתחת ל2 שחקנים");
-      }
-
-      if(!this.errors.length)
-      {
-        room.startPlay();
-      }
-    }
-
-    initPlayer()
-    {
-      this.ws.player = new Player();
     }
 
     getRoomID()

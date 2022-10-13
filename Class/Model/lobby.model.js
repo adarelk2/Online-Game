@@ -43,10 +43,10 @@ class Lobby_Model extends Socket_Model
         config.ROOMS.disconnectFromRooms(this);
       }
 
-      let index = config.ROOMS.rooms.findIndex(room=>room.id == this.params.id);
-      if(index >=0)
+      let room = config.ROOMS.rooms[this.params.id];
+      if(room.id)
       {
-        let Room = config.ROOMS.roomIsValid(this, index);
+        let Room = config.ROOMS.roomIsValid(this, room.id);
         if(!Room)
         {
           this.errors.push("החדר המלא יש לחפש חדר אחר");
