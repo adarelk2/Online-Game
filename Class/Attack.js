@@ -81,7 +81,7 @@ class Attack
         let x = user.ws.player.y - this.y;
         
         let d = Math.sqrt(x * x + y * y);
-        if(d <=25)
+        if(d <=35)
         {
           this.#usersDemage[user.userid] = user;
         }

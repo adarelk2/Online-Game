@@ -15,32 +15,17 @@ class Player_Model extends Socket_Model
       this.ws.player = new Player();
     }
 
-    left()
+    makeMove()
     {
-      this.ws.player.left();
-      let room = config.ROOMS.getRoomByID(this.getRoomID());
-      room.sendMsg({method:"renderGame",room})
-    }
-
-    right()
-    {
-      this.ws.player.right();
-      let room = config.ROOMS.getRoomByID(this.getRoomID());
-      room.sendMsg({method:"renderGame",room})
-    }
-
-    up()
-    {
-      this.ws.player.up();
-      let room = config.ROOMS.getRoomByID(this.getRoomID());
-      room.sendMsg({method:"renderGame",room})
-    }
-
-    down()
-    {
-      this.ws.player.down();
-      let room = config.ROOMS.getRoomByID(this.getRoomID());
-      room.sendMsg({method:"renderGame",room})
+      if(this.params.moves.length < 3)
+      {
+        this.params.moves.map(move=>{
+          this.ws.player[move]();
+        })
+  
+        let room = config.ROOMS.getRoomByID(this.getRoomID());
+        room.sendMsg({method:"renderGame",room})
+      }
     }
 
     shoot()
@@ -49,7 +34,7 @@ class Player_Model extends Socket_Model
       this.ws.player.shoot.shoot();
     }
 
-    demage(_count = 10)
+    demage(_count = 25)
     {
       this.ws.player.life -= _count;
     }
@@ -60,6 +45,11 @@ class Player_Model extends Socket_Model
       if(room.getCountOfPlayers() <=1)
       {
         this.errors.push("אין אפשרות להתחיל מתחת ל2 שחקנים");
+      }
+
+      if(room.admin != this.ws.userid)
+      {
+        this.errors.push("אין לך הרשאה עבור פעולה זאת");
       }
 
       if(!this.errors.length)

@@ -9,31 +9,29 @@ class Room_Controller
     {
     }
 
-    disconnectFromRooms(_ws, _callback=false)
+    disconnectFromRooms(_ws)
     {
         for (const [key, room] of Object.entries(this.rooms)) 
         {
         let userExist = this.searchUserInRoom(_ws,room.id);
             if(userExist.state)
             {
-                if(room.getCountOfPlayers() <= 1)
+                room.removePlayer(userExist);
+
+                if(room.getCountOfPlayers() <= 1 && room.gameStarted)
                 {
+                    room.sendMsg({method:"EnterningLoby"})
+
                     this.deleteRooms([room.id])
                 }
                 else
                 {
-                    room.removePlayer(userExist);
                     if(room.admin == _ws.userid)
                     {
                         room.setRandomAdmin();
                     }
                 }
             }
-        }
-
-        if(_callback)
-        {
-            _callback(_ws);
         }
     }
 
