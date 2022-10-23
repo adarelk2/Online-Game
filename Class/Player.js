@@ -44,7 +44,7 @@ class Player
 
     down()
     {
-      if(this.y + 15 <= 800)
+      if(this.y + 15 <= 700)
       {
         this.y +=15;
         this.lastStep = "down"

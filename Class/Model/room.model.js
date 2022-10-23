@@ -1,5 +1,4 @@
 const RoomConfig = require("../../Const/Room.js");
-const config = require("../../app");
 const Player_Model = require("../Model/player.model");
 
 class Room_Model
@@ -14,6 +13,7 @@ class Room_Model
         coins:0,
         players:{}
     }
+    gameStarted = false;
     messages = [];
     constructor(_user, _maxUsers=4, _title = "client ##")
     {
@@ -34,7 +34,10 @@ class Room_Model
         this[team].players[_user.userid] = Player;
         Player.setRoomID(this.id);
 
-        this.sendMsg({method:"roomRender", room:this});
+        Player.initPlayer();
+
+        let method = (this.gameStarted) ? "renderGame" : "roomRender";
+        this.sendMsg({method, room:this});
         return this;
     }
 
@@ -57,13 +60,14 @@ class Room_Model
     setAdmin(_admin)
     {
         this.admin = _admin.userid;
-        this.sendMsg({method:"roomRender", room: this})
+
+        let method = (this.gameStarted) ? "renderGame" : "roomRender";
+        this.sendMsg({method, room:this});
     }
 
     setRandomAdmin()
     {
-        const newAdmin = (Object.keys(this[RoomConfig.Room.Team[0]].players).length) ? Object.values(this[RoomConfig.Room.Team[0].players])[0] : Object.values(this[RoomConfig.Room.Team[1].players])[0];
-        console.log(newAdmin);
+        const newAdmin = (Object.keys(this[RoomConfig.Room.Team[0]].players).length) ? Object.values(this[RoomConfig.Room.Team[0]].players)[0] : Object.values(this[RoomConfig.Room.Team[1]].players)[0];
         this.setAdmin(newAdmin);
     }
 
@@ -91,17 +95,15 @@ class Room_Model
     {
         this[_user.team].players[_user.userid].setRoomID(false);
         delete this[_user.team].players[_user.userid];
-        this.sendMsg({method:"roomRender", room:this});
+
+        let method = (this.gameStarted) ? "renderGame" : "roomRender";
+        this.sendMsg({method, room:this});
     }
 
     startPlay()
     {
-        RoomConfig.Room.Team.map(team=>{
-            for (const [key, user] of Object.entries(this[team].players)) 
-            {
-                user.initPlayer();
-            }
-        })
+        this.gameStarted = true;
+
         this.sendMsg({method:"renderGame",room:this})
     }
 
